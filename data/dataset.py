@@ -1,12 +1,26 @@
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, random_split
 import numpy as np
 import pandas as pd
 
-class DryBean(Dataset):
+class DryBean():
+    def __init__(self, train, **kwargs):
+        dry_bean = _DryBean(**kwargs)
+
+        train_size = int(0.8*len(dry_bean))
+        test_size = len(dry_bean)-train_size
+        train_dataset, test_dataset = torch.utils.data.random_split(dry_bean, train_size, test_size)
+
+        if train:
+            return train_dataset
+        else: 
+            return test_dataset
+
+
+class _DryBean(Dataset):
     """Dry Bean dataset."""
 
-    def __init__(self, csv_file, transform=None):
+    def __init__(self, csv_file, transform=None, shuffle=True):
         """
         Args:
             csv_file (string): Path to the csv file.
