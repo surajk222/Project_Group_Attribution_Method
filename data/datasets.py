@@ -7,7 +7,11 @@ import pandas as pd
 class DryBean(Dataset):
     """Dry Bean dataset."""
 
-    def __init__(self, train, transform=None):
+    def __init__(
+        self,
+        train: bool,
+        transform: callable=None
+        )->None:
         """
         Args:
             csv_file (string): Path to the csv file.
@@ -58,10 +62,25 @@ class DryBean(Dataset):
 
         return datapoint, label
     
-    def _normalize_and_split_into_data_and_categories(self,data_df):
+    def _normalize_and_split_into_data_and_categories(
+        self,
+        data_df: pd.DataFrame
+        )->tuple[torch.Tensor, torch.Tensor]:
+        """
+        Normalizes the Dataset. Each feature is minmax-scaled between [0,1].
+
+        Args:
+            data_df (pd.DataFrame): Dataframe that must be normalized.
+
+        Returns:
+            Tuple of datapoints_tensor, categories_tensor
+
+            datapoints_tensor (torch.Tensor): data_df[:,0:-1] normalized.
+            categories_tensor (torch.Tensor): data_df[:,-1], so the labels.
+        """
         datapoints = data_df.iloc[:,0:-1]
 
-        #normalize
+
         datapoints = (datapoints - datapoints.min()) / (datapoints.max() - datapoints.min())
         datapoints_np = datapoints.to_numpy(dtype=np.float32)
         datapoints_tensor = torch.from_numpy(datapoints_np)
