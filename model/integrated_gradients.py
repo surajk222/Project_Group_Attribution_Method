@@ -23,7 +23,7 @@ class IntegratedGrandients():
     def attribute(
             self,
             x: torch.Tensor,
-            target_label_index: int,
+            target_label_index: int=None,
             baseline: torch.Tensor = None,
             n_steps: int = 50
             ) -> torch.Tensor:
@@ -32,7 +32,9 @@ class IntegratedGrandients():
 
         Args:
             x (torch.Tensor): Input for which the integrated gradients must be calculated.
-            target_label_index (int): Index of the output feature for which the integrated gradients must be calculated.
+            target_label_index (optional, int): Index of the output feature for which the integrated gradients must be calculated.
+                If the target_label_index is not specified, the Integrated Gradients of the output feature with the highest value
+                gets calculated.
             baseline (optional, torch.Tensor): The baseline input. If None, the baseline is set to a zero-vector. Must have the same shape as x.
                 Defaults to None.
             n_steps (optional, int): Number of steps for the integral approximation. Defaults to 50.
