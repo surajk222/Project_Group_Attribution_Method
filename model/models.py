@@ -36,7 +36,7 @@ class NeuralNetwork(nn.Module):
 
         """
         This method is meant to be a callable for the integrated gradients class. It
-        computes the model output with respect to the model input.
+        computes the gradient of the model output with respect to the model input.
 
         Args:
             x (torch.Tensor): A batch of inputs at which the gradients of the model output are calculated.
