@@ -3,7 +3,34 @@ import torch
 from torch.utils.data import DataLoader
 from data.datasets import DryBean
 
-def train_model():
+def train_model(
+        num_epochs: int = 8,
+         lr: float = 0.01
+         )->tuple[
+             torch.nn.Module,
+             list[float],
+             list[float],
+             list[float],
+             list[float]
+         ]:
+    """
+    This method trains the NeuralNetwork on the Dry Beans Dataset. It returns the model and four performance
+    metrics. The metrics are calculated before each epoch and after the final epoch.
+
+    Args:
+        num_epochs (int): Number of epochs the network should be trained.
+        lr (int): The learning rate.
+
+    returns:
+        model (torch.nn.Module): The trained network on the Dry Beans Dataset.
+        test_loss_array (list[float]): The average test-loss per epoch.
+        test_accuracy_array (list[float]): The average test-accuracy per epoch.
+        train_loss_array (list[float]): The average train-loss per epoch.
+        train_accuracy_array (list[float]): The average train-accuracy per epoch.
+    
+    """
+
+
     train_dataset = DryBean(train=True)
     test_dataset = DryBean(train=False)
 
@@ -11,12 +38,12 @@ def train_model():
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=True)
 
     model = NeuralNetwork()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     loss_fn = torch.nn.CrossEntropyLoss()
-    num_epochs = 8
     test_loss_array, test_accuracy_array, train_loss_array, train_accuracy_array = [], [], [], []
 
-    for epoch in range(num_epochs):
+    def train_and_test_one_epoch(train: bool):
+        #test-loss
         model.eval()
         test_loss, test_accuracy = 0,0
         with torch.no_grad():
@@ -31,17 +58,20 @@ def train_model():
         #training-error and training
         train_loss, train_accuracy = 0,0
         for train_inputs, train_labels in train_dataloader:
-            #training
-            model.train()
-            optimizer.zero_grad()
-            train_predictions = model(train_inputs)
-            loss = loss_fn(train_predictions, train_labels)
-            loss.backward()
-            optimizer.step()
+            if train:
+                #training
+                model.train()
+                optimizer.zero_grad()
+                train_predictions = model(train_inputs)
+                loss = loss_fn(train_predictions, train_labels)
+                loss.backward()
+                optimizer.step()
 
             #train error
             model.eval()
             with torch.no_grad():
+                if not train:
+                    train_predictions = model(train_inputs)
                 train_loss += loss_fn(train_predictions, train_labels).item()
                 train_accuracy += (train_predictions.argmax(1) == train_labels.argmax(1)).type(torch.float).sum().item()
             
@@ -55,5 +85,14 @@ def train_model():
         print("Test-Accuracy: " + str(test_accuracy))
         print("Train-Loss: " + str(train_loss))
         print("Train-Accuracy: " + str(train_accuracy))
+
+    for epoch in range(num_epochs):
+        print("Epoch nr.: " + str(epoch))
+        train_and_test_one_epoch(train=True)
+        
+
+    #to get the train and test errors as well as accuracy after the last train epoch
+    print("Final metrics: ")
+    train_and_test_one_epoch(train=False)
 
     return model, test_loss_array, test_accuracy_array, train_loss_array, train_accuracy_array
