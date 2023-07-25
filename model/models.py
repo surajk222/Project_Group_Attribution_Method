@@ -20,22 +20,27 @@ class NeuralNetwork(nn.Module):
     def forward(self,x):
         return self.model(x)
     
-    def get_max_feature(self,x: torch.Tensor):
+    def get_max_feature(
+            self,
+            x: torch.Tensor,
+            )->tuple[torch.Tensor, torch.LongTensor]:
         """
-        Evaluates the model for a given input vector and returns the maximum value of it.
+        Evaluates the model for a given input vector and returns the maximum value and its index.
 
         Args:
             x (torch.Tensor): Input feature fpr which the maximum should be calculated.
         
         Returns:
             y (torch.Tensor): Maximum of the model output for the given input.
+            y_index (torch.LongTensor): Argmax of the model output for the given input.
 
         """
         self.eval()
         with torch.no_grad():
             y = self(x)
+            y_index = y.argmax()
             y = y.max()
-        return y
+        return y, y_index
     
     def get_gradients_with_respect_to_inputs(
             self,
