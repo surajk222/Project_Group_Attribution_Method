@@ -1,7 +1,7 @@
 from typing import Callable
 import torch
 
-class IntegratedGrandients():
+class IntegratedGradients():
     """
     Implementation of the Integragrated Gradients method from Sundarajan, Taly and Yan.
     See https://arxiv.org/abs/1703.01365 for the original paper.
@@ -23,7 +23,7 @@ class IntegratedGrandients():
     def attribute(
             self,
             x: torch.Tensor,
-            target_label_index: int=None,
+            target_label_index: int = None,
             baseline: torch.Tensor = None,
             n_steps: int = 50
             ) -> torch.Tensor:
