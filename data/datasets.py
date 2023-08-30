@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import numpy as np
 import pandas as pd
+from data.util.utils import DatasetMode
 
 
 class DryBean(Dataset):
@@ -9,22 +10,22 @@ class DryBean(Dataset):
 
     def __init__(
         self,
-        train: bool,
+        mode: DatasetMode,
         transform: callable=None
         )->None:
         """
         Args:
-            csv_file (string): Path to the csv file.
-            transform (callable, optional): Optionale transform to be applied.
+            mode (DatasetMode): Train, Validation or Test-Dataset.
+            transform (callable, optional): Transform to be applied.
         """
         file_path = {
-            "train": r"data\files\splitted\Dry_Bean_Dataset_Train.csv",
-            "test": r"data\files\splitted\Dry_Bean_Dataset_Test.csv"
+            DatasetMode.TRAIN: r"data\files\splitted\Dry_Bean_Dataset_Train.csv",
+            DatasetMode.VALIDATION: r"data\files\splitted\Dry_Bean_Dataset_Validation.csv",
+            DatasetMode.TEST: r"data\files\splitted\Dry_Bean_Dataset_Test.csv"
         }
-        if train:
-            data_frame = pd.read_csv(file_path["train"],sep=";")
-        else:
-            data_frame = pd.read_csv(file_path["test"],sep=";")
+        
+        data_frame = pd.read_csv(file_path[mode],sep=";")
+
         self.transform = transform
         self.categories = {
             "BARBUNYA": 0,

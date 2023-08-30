@@ -2,6 +2,7 @@ from model.models import NeuralNetwork
 import torch
 from torch.utils.data import DataLoader
 from data.datasets import DryBean
+from data.util.utils import DatasetMode
 
 def train_model(
         num_epochs: int = 8,
@@ -31,8 +32,8 @@ def train_model(
     """
 
 
-    train_dataset = DryBean(train=True)
-    test_dataset = DryBean(train=False)
+    train_dataset = DryBean(mode=DatasetMode.TRAIN)
+    test_dataset = DryBean(mode=DatasetMode.TEST)
 
     train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=True)
