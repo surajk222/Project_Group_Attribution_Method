@@ -6,16 +6,29 @@ class NeuralNetwork(nn.Module):
     Neural Network for the dry beans dataset.
     """
 
-    def __init__(self):
+    def __init__(self, hidden_layers: list[int]):
+        """
+        Args:
+            hidden_layers(list[int]): list of the neuron-numbers of the hidden layers.
+        """
         super().__init__()
-        self.model = nn.Sequential(
-            nn.Linear(16, 32),
-            nn.ReLU(),
-            nn.Linear(32,16),
-            nn.ReLU(),
-            nn.Linear(16,7)
-            #Since we use nn.CrossEntropyLoss() as our loss function, there is no need for a softmax-activation function.
-        )
+        activation_fn = nn.ReLU()
+        
+        #add layers to the layer_list
+        layer_list = []
+        for i in range(len(hidden_layers)):
+            #input-layer
+            if i == 0:
+                layer_list.append(nn.Linear(16,hidden_layers[i]))
+                layer_list.append(activation_fn)
+            else:
+                layer_list.append(nn.Linear(hidden_layers[i-1],hidden_layers[i]))
+                layer_list.append(activation_fn)
+        
+        #output-layer
+        layer_list.append(nn.Linear(hidden_layers[i],7)) #Since we use nn.CrossEntropyLoss() as our loss function, there is no need for a softmax-activation function.
+
+        self.model = nn.Sequential(*layer_list)
 
     def forward(self,x):
         return self.model(x)

@@ -5,8 +5,9 @@ from data.datasets import DryBean
 from data.util.utils import DatasetMode
 
 def train_model(
+        hidden_layers: list[int],
         num_epochs: int = 8,
-         lr: float = 0.01
+        lr: float = 0.01
          )->tuple[
              torch.nn.Module,
              list[float],
@@ -15,10 +16,11 @@ def train_model(
              list[float]
          ]:
     """
-    This method trains the NeuralNetwork on the Dry Beans Dataset. It returns the model and four performance
-    metrics. The metrics are calculated before each epoch and after the final epoch.
+    This method instantiates a NeuralNetwork with the given hidden_layers and trains it on the Dry Beans Dataset. 
+    It returns the model and four performance metrics. The metrics are calculated before each epoch and after the final epoch.
 
     Args:
+        hidden_layers (list[int]): list of the neuron-numbers of the hidden layers.
         num_epochs (int): Number of epochs the network should be trained.
         lr (int): The learning rate.
 
@@ -38,7 +40,7 @@ def train_model(
     train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=True)
 
-    model = NeuralNetwork()
+    model = NeuralNetwork(hidden_layers=hidden_layers)
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
     loss_fn = torch.nn.CrossEntropyLoss()
     test_loss_array, test_accuracy_array, train_loss_array, train_accuracy_array = [], [], [], []
