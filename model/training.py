@@ -3,11 +3,13 @@ import torch
 from torch.utils.data import DataLoader
 from data.datasets import DryBean
 from data.util.utils import DatasetMode
+from model.util.visualisation import visualise_loss_and_accuracy
+from tqdm import tqdm
 
 def train_model(
         hidden_layers: list[int],
         num_epochs: int = 8,
-        lr: float = 0.01
+        lr: float = 0.001
          )->tuple[
              torch.nn.Module,
              list[float],
@@ -41,12 +43,12 @@ def train_model(
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=True)
 
     model = NeuralNetwork(hidden_layers=hidden_layers)
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = torch.nn.CrossEntropyLoss()
     test_loss_array, test_accuracy_array, train_loss_array, train_accuracy_array = [], [], [], []
 
     def train_and_test_one_epoch(train: bool):
-        #test-loss
+        #test-loss and accuracy
         model.eval()
         test_loss, test_accuracy = 0,0
         with torch.no_grad():
@@ -58,9 +60,16 @@ def train_model(
         test_loss = test_loss / len(test_dataloader)
         test_accuracy = test_accuracy / len(test_dataloader.dataset)
 
-        #training-error and training
+        #training-loss and accuracy and training
         train_loss, train_accuracy = 0,0
         for train_inputs, train_labels in train_dataloader:
+            #train error
+            model.eval()
+            with torch.no_grad():
+                train_predictions = model(train_inputs)
+                train_loss += loss_fn(train_predictions, train_labels).item()
+                train_accuracy += (train_predictions.argmax(1) == train_labels.argmax(1)).type(torch.float).sum().item()
+
             if train:
                 #training
                 model.train()
@@ -69,14 +78,6 @@ def train_model(
                 loss = loss_fn(train_predictions, train_labels)
                 loss.backward()
                 optimizer.step()
-
-            #train error
-            model.eval()
-            with torch.no_grad():
-                if not train:
-                    train_predictions = model(train_inputs)
-                train_loss += loss_fn(train_predictions, train_labels).item()
-                train_accuracy += (train_predictions.argmax(1) == train_labels.argmax(1)).type(torch.float).sum().item()
             
         train_loss = train_loss / len(train_dataloader)
         train_accuracy = train_accuracy / len(train_dataloader.dataset)
@@ -84,18 +85,40 @@ def train_model(
         test_accuracy_array.append(test_accuracy)
         train_loss_array.append(train_loss)
         train_accuracy_array.append(train_accuracy)
-        print("Test-Loss: " + str(test_loss))
-        print("Test-Accuracy: " + str(test_accuracy))
-        print("Train-Loss: " + str(train_loss))
-        print("Train-Accuracy: " + str(train_accuracy))
+        #print("Test-Loss: " + str(test_loss))
+        #print("Test-Accuracy: " + str(test_accuracy))
+        #print("Train-Loss: " + str(train_loss))
+        #print("Train-Accuracy: " + str(train_accuracy))
 
-    for epoch in range(num_epochs):
-        print("Epoch nr.: " + str(epoch))
+    for epoch in tqdm(range(num_epochs)):
         train_and_test_one_epoch(train=True)
         
 
     #to get the train and test errors as well as accuracy after the last train epoch
-    print("Final metrics: ")
     train_and_test_one_epoch(train=False)
+    print("Final metrics: ")
+    print("Test-Loss: " + str(test_loss_array[-1]))
+    print("Test-Accuracy: " + str(test_accuracy_array[-1]))
+    print("Train-Loss: " + str(train_loss_array[-1]))
+    print("Train-Accuracy: " + str(train_accuracy_array[-1]))
+    print(sum(param.numel() for param in model.parameters()))
+    print(model)
 
     return model, test_loss_array, test_accuracy_array, train_loss_array, train_accuracy_array
+
+def train_model_and_visualize(
+        hidden_layers: list[int],
+        num_epochs: int = 8,
+        lr: float = 0.01
+        ) -> None:
+    model, test_loss_array, test_accuracy_array, train_loss_array, train_accuracy_array = train_model(
+        hidden_layers=hidden_layers,
+        num_epochs=num_epochs,
+        lr=lr)
+    
+    visualise_loss_and_accuracy(
+        train_accuracy=train_accuracy_array,
+        train_loss=train_loss_array,
+        validation_accuracy=test_accuracy_array,
+        validation_loss=test_loss_array
+    )
