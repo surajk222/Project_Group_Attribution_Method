@@ -42,6 +42,7 @@ def train_model(
     train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=True)
 
+    torch.manual_seed(42)
     model = NeuralNetwork(hidden_layers=hidden_layers)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = torch.nn.CrossEntropyLoss()
