@@ -33,6 +33,14 @@ class NeuralNetwork(nn.Module):
     def forward(self,x):
         return self.model(x)
     
+    def predict(self,
+        x: torch.Tensor) -> torch.Tensor:
+
+        y = self(x)
+
+        return nn.functional.softmax(y).detach()
+
+    
     def get_max_feature(
             self,
             x: torch.Tensor,
@@ -59,7 +67,7 @@ class NeuralNetwork(nn.Module):
             self,
             x: torch.Tensor,
             target_label_idx: int = None,
-            ) -> torch.Tensor:
+            ) -> (torch.Tensor, int):
 
         """
         This method is meant to be a callable for the integrated gradients class. It
@@ -75,6 +83,8 @@ class NeuralNetwork(nn.Module):
 
         Returns:
             gradients (torch.Tensor): Gradients of the model output with respect to the input x.
+            target_label_index (int): Equals the input argument, except the input argument is None. In this case, the
+                index of the maximum output feature is returned.
         """
         if target_label_idx==None:
             original_x = x[-1]
@@ -89,6 +99,4 @@ class NeuralNetwork(nn.Module):
             model_prediction.backward(gradient=torch.ones_like(model_prediction))
             gradients[i,:] = input.grad
         
-        return gradients
-
-        
+        return gradients, target_label_idx
