@@ -26,7 +26,7 @@ class IntegratedGradients():
             target_label_index: int = None,
             baseline: torch.Tensor = None,
             n_steps: int = 50
-            ) -> torch.Tensor:
+            ) -> (torch.Tensor, int):
         """
         Performs the calculation of the attribution scores with the Integrated Gradients method.
 
@@ -41,15 +41,17 @@ class IntegratedGradients():
         
         Returns:
             integrated_gradients (torch.Tensor): The Integrated Gradients of the model output for the provided output feature to the input.
+            target_label_index (int): Equals the input argument, except the input argument is None. In this case, the
+                index of the maximum output feature is returned.
         """
         if baseline == None:
             baseline = x*0
         assert(baseline.shape == x.shape)
 
         straightline_path = torch.vstack([baseline + float(i)/n_steps * (x-baseline) for i in range(1, n_steps + 1)])
-        gradients = self.get_gradients(straightline_path, target_label_index)
+        gradients, target_label_index = self.get_gradients(straightline_path, target_label_index)
 
         avg_gradients = gradients.mean(dim=0)
         integrated_gradients = (x-baseline) * avg_gradients
 
-        return integrated_gradients
+        return integrated_gradients, target_label_index
