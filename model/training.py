@@ -123,3 +123,5 @@ def train_model_and_visualize(
         validation_accuracy=test_accuracy_array,
         validation_loss=test_loss_array
     )
+
+    return model
