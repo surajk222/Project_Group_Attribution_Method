@@ -39,10 +39,10 @@ def train_model(
     train_dataset = DryBean(mode=DatasetMode.TRAIN)
     test_dataset = DryBean(mode=DatasetMode.TEST)
 
-    torch.manual_seed(42)
     train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=True)
 
+    torch.manual_seed(42)
     model = NeuralNetwork(hidden_layers=hidden_layers)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = torch.nn.CrossEntropyLoss()
@@ -123,5 +123,3 @@ def train_model_and_visualize(
         validation_accuracy=test_accuracy_array,
         validation_loss=test_loss_array
     )
-
-    return model
