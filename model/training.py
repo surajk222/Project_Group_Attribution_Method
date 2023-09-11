@@ -110,7 +110,7 @@ def train_model(
 def train_model_and_visualize(
         hidden_layers: list[int],
         num_epochs: int = 8,
-        lr: float = 0.01
+        lr: float = 0.001
         ) -> torch.nn.Module:
     model, test_loss_array, test_accuracy_array, train_loss_array, train_accuracy_array = train_model(
         hidden_layers=hidden_layers,
