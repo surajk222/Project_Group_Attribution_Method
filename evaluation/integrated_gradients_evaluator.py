@@ -3,6 +3,8 @@ from data.datasets import DryBean
 from data.util.utils import DatasetMode
 from model.attribution_methods.integrated_gradients import IntegratedGradients
 from model.models import NeuralNetwork
+from tqdm import tqdm
+import numpy as np
 
 class IntegratedGradientsEvaluator():
     """
@@ -17,40 +19,86 @@ class IntegratedGradientsEvaluator():
         self.dataset = DryBean(mode=DatasetMode.TEST)
         self.ig = IntegratedGradients(self.model.get_gradients_with_respect_to_inputs)
 
-    def mse_delta(
+
+    
+    def completeness_deltas(
             self,
-            n_steps: int = 50,
-            baseline: torch.Tensor = None
-    ) -> float:
+            baseline: torch.Tensor = None,
+            n_steps: int = 50
+        ) -> np.ndarray[float]:
         """
-        This method evaluates the delta criterium, also called completeness axiom.
-        It calculates the MSE of the difference between the sum of the attribution scores
-        and f(x)-f(x') over the test dataset.
+        Calculates for each datapoint x in self.dataset the absolute difference between:
+            sum of integrated gradients attribution scores and
+            f(x) - f(baseline)
 
         Args:
-            n_steps (optional, int): Number of steps for the integral approximation. Default is 50.
-            baseline (optional, torch.Tensor): Baseline for the Integrated Gradients method. If no baseline is provided,
-                the zero-vector is chosen as a baseline.
+            baseline (optional, torch.Tensor): The baseline input. If None, the baseline is set to a zero-vector. Must have the same shape as x.
+                Defaults to None.
+            n_steps (optional, int): Number of steps for the integral approximation. Defaults to 50.
+        
+        Returns:
+            completeness_delta_abs (np.ndarray): NumPy array for the absolute deltas of each datapoint.
+        """
+        if baseline == None:
+            baseline = 0*self.dataset[0][0]
+
+        completeness_deltas = []
+
+        for i,(x,y) in tqdm(enumerate(self.dataset)):
+
+            f_x, target_label_index = self.model.get_max_feature(x)
+            f_baseline = self.model.predict(baseline)[target_label_index]
+
+            ig_scores = self.ig.attribute(x=x,target_label_index=target_label_index, baseline=baseline, n_steps=n_steps)[0]
+            ig_scores_sum = ig_scores.sum()
+
+            delta = (f_x - f_baseline - ig_scores_sum)
+            delta = delta.item()
+
+            completeness_deltas.append(delta)
+
+
+        completeness_deltas_np = np.array(completeness_deltas)
+
+        completeness_deltas_abs = completeness_deltas_np
+
+        return completeness_deltas_abs
+    
+    def completeness_deltas_statistics(
+            self,
+            baseline: torch.Tensor = None,
+            n_steps: int = 50,
+            return_results = False
+        ) -> tuple[np.ndarray[float], float,float,float]:
+
+        """
+        Calculates the mean, max and min of the absolute completeness deltas and prints the results.
+
+        Args:
+            baseline (optional, torch.Tensor): The baseline input. If None, the baseline is set to a zero-vector. Must have the same shape as x.
+                Defaults to None.
+            n_steps (optional, int): Number of steps for the integral approximation. Defaults to 50.
 
         Returns:
-            mse_delta (float)
+            np.ndarray[float]: absolute varray of the completeness delta for each datapoint
+            float: absolute
         """
+        
+        completeness_deltas_abs = self.completeness_deltas(baseline=baseline,n_steps=n_steps)
 
+        #mean
+        mean = completeness_deltas_abs.mean()
 
-        mse_delta = 0
-        if baseline == None:
-            baseline = torch.zeros_like(self.dataset[0][0])
+        #max
+        max = completeness_deltas_abs.max()
 
-        for i,(x,y) in enumerate(self.dataset):
-            print(i)
-            attributions = self.ig.attribute(x,baseline=baseline,n_steps=n_steps)
+        #min
+        min = completeness_deltas_abs.min()
 
-            model_prediction = self.model(x)
-            model_prediction = model_prediction.max()
+        print(f"Mittlere absolute Abweichung: {mean : .2e}")
+        print(f"Maximum der betragsmäßigen Abweichung; {max : .2e}")
+        print(f"Minimum der betragsmäßigen Abweichung: {min : .2e}")
 
-            delta = self.model.get_max_feature(x) - self.model.get_max_feature(baseline)
-            delta = (delta.item() - attributions.sum().item())**2
-            mse_delta += delta
+        if return_results:
+            return completeness_deltas_abs, mean, max, min
 
-        mse_delta /= len(self.dataset)
-        return mse_delta
