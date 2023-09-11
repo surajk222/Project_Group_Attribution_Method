@@ -46,6 +46,8 @@ class NeuralNetwork(nn.Module):
             y (torch.Tensor): Model output with softmax-function applied to it.
         """
 
+        self.eval()
+
         y = self(x)
 
         if detach:
@@ -74,7 +76,7 @@ class NeuralNetwork(nn.Module):
         """
         self.eval()
         with torch.no_grad():
-            y = self(x)
+            y = self.predict(x)
             y_index = y.argmax()
             y = y.max()
         return y, y_index
