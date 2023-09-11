@@ -34,11 +34,27 @@ class NeuralNetwork(nn.Module):
         return self.model(x)
     
     def predict(self,
-        x: torch.Tensor) -> torch.Tensor:
+        x: torch.Tensor,
+        detach: bool = True) -> torch.Tensor:
+        """
+        Evaluates the model and applies the softmax function to it.
+        Args:
+            x (torch.Tensor): Datapoint for which the model gets predicted.
+            detach (bool, optional = False): If the model output should be detached from the graph.)
+
+        Returns:
+            y (torch.Tensor): Model output with softmax-function applied to it.
+        """
 
         y = self(x)
 
-        return nn.functional.softmax(y).detach()
+        if detach:
+            return nn.functional.softmax(y).detach()
+        
+        else:
+            return nn.functional.softmax(y)
+
+        
 
     
     def get_max_feature(
@@ -95,7 +111,7 @@ class NeuralNetwork(nn.Module):
         for i,input in enumerate(x):
             input.requires_grad = True
             self.eval()
-            model_prediction = self(input)[target_label_idx]
+            model_prediction = self.predict(input, detach=False)[target_label_idx]
             model_prediction.backward(gradient=torch.ones_like(model_prediction))
             gradients[i,:] = input.grad
         

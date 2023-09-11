@@ -13,10 +13,17 @@ class IntegratedGradients():
             ) -> None:
         """
         Args:
-            get_gradients (Callable): Calculates the gradients of the models output with respect to the input.
-                Args:
-                    x (torch.Tensor): Input for which the gradient should be calculated.
-                    target_label_index (int): index of the output feature for which the gradient gets calculated.
+            x (torch.Tensor): A batch of inputs at which the gradients of the model output are calculated.
+                x must have the dimensions num_batches x input_dim
+            target_label_idx (optional, int): index of the output feature for which the gradient should be calculated. This is
+                usually the index of the output feature with the highest score I.
+                If the target_label_index is not specified, the index of the output feature with the highest value
+                will be selected.
+
+        Returns:
+            gradients (torch.Tensor): Gradients of the model output with respect to the input x.
+            target_label_index (int): Equals the input argument, except the input argument is None. In this case, the
+                index of the maximum output feature is returned.
         """
         self.get_gradients = get_gradients
 
