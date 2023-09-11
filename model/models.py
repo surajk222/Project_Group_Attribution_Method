@@ -77,7 +77,7 @@ class NeuralNetwork(nn.Module):
         self.eval()
         with torch.no_grad():
             y = self.predict(x)
-            y_index = y.argmax()
+            y_index = y.argmax().item()
             y = y.max()
         return y, y_index
     
