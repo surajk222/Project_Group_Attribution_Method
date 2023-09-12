@@ -3,28 +3,36 @@ import numpy as np
 
 
 def _visualize_log_odds(
-        log_odds: np.ndarray,
-        mean: np.ndarray,
-        max: np.ndarray,
-        min: np.ndarray
+    log_odds: np.ndarray,
+    mean: np.ndarray,
+    max: np.ndarray,
+    min: np.ndarray,
+    random_references_mean: np.ndarray,
+    apply_log: bool,
 ) -> None:
     """
     Serves the IntegratedGradientEvaluator class for visualization.
     """
-    x = np.linspace(0,1,16)
-    ax = plt.plot(x, mean, label="Mean",linestyle="-", color="black")
-    plt.plot(x,max,label="Max",linestyle="--", color="gray")
-    plt.plot(x,min,label="Min", linestyle=":", color="gray")
+    x = np.linspace(0, 1, 16)
+    ax = plt.plot(x, mean, label="Mean", linestyle="-", color="black")
+    plt.plot(x, max, label="Max", linestyle="--", color="gray")
+    plt.plot(x, min, label="Min", linestyle=":", color="gray")
+    plt.plot(x, random_references_mean, label="Mean of Random Reference")
 
     plt.xlabel("Anteil der maskierten Features")
-    plt.ylabel("Log Odds Ratio")
 
-    plt.title("Log Odds von Integrated Gradients")
+    if apply_log:
+        plt.ylabel("Log Odds Ratio")
+    else: 
+        plt.ylabel("Modellausgabe")
+
+    if apply_log:
+        plt.title("Log Odds von Integrated Gradients")
+
+    else: 
+        plt.title("Certainty Kurve von Integrated Gradients")
 
     plt.legend()
     plt.tight_layout()
-    plt.savefig('log_odds_ig.eps', format='eps')
-    #plt.show()
-
-
-  
+    plt.savefig("log_odds_ig.eps", format="eps")
+    # plt.show()
