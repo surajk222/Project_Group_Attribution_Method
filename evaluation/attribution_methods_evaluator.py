@@ -57,7 +57,9 @@ class AttributionMethodsEvaluator():
             certainties or log_odds_of_datapoint(np.ndarray): Depending on apply_log
         """
 
-        attribution_scores, target_label_index = attribute(x,target_label_index=None, **kwargs)
+        target_label_index = self.model.predict(x).argmax().item()
+
+        attribution_scores, _ = attribute(x,target_label_index=None, **kwargs)
         masking_order = torch.argsort(attribution_scores, descending=True)
         masking_order = masking_order.numpy()
 
