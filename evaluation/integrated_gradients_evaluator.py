@@ -5,6 +5,7 @@ from model.attribution_methods.integrated_gradients import IntegratedGradients
 from model.models import NeuralNetwork
 from tqdm import tqdm
 import numpy as np
+from evaluation.utils.visualisation import _visualize_completeness_deltas_comparison
 
 class IntegratedGradientsEvaluator():
     """
@@ -60,7 +61,7 @@ class IntegratedGradientsEvaluator():
 
         completeness_deltas_np = np.array(completeness_deltas)
 
-        completeness_deltas_abs = completeness_deltas_np
+        completeness_deltas_abs = np.abs(completeness_deltas_np)
 
         return completeness_deltas_abs
     
@@ -95,10 +96,51 @@ class IntegratedGradientsEvaluator():
         #min
         min = completeness_deltas_abs.min()
 
-        print(f"Mittlere absolute Abweichung: {mean : .2e}")
-        print(f"Maximum der betragsmäßigen Abweichung; {max : .2e}")
-        print(f"Minimum der betragsmäßigen Abweichung: {min : .2e}")
 
         if return_results:
             return completeness_deltas_abs, mean, max, min
+        
+        else:
+            print(f"Mittlere absolute Abweichung: {mean : .2e}")
+            print(f"Maximum der betragsmäßigen Abweichung; {max : .2e}")
+            print(f"Minimum der betragsmäßigen Abweichung: {min : .2e}")
+
+
+    def completeness_deltas_comparison(
+        self,
+        n_steps_arr: list[int],
+        baseline: torch.Tensor = None
+        ) -> np.ndarray:
+        """
+        Serves the purpose of comparing the mean delta from the IG method with different numbers of steps in the integral approximation.
+
+        Args:
+            n_steps_arr (list[int]): list of n_steps to compare
+            baseline (torch.Tensor): baseline for the IG method
+
+        Returns:
+            completeness_delta_list (np.ndarray): array of the mean deltas
+        """
+        completeness_delta_list = []
+
+        for n_steps in n_steps_arr:
+            completeness_deltas = self.completeness_deltas_statistics(baseline=baseline, n_steps=n_steps, return_results=True)[1]
+            completeness_delta_list.append(completeness_deltas)
+
+        return np.array(completeness_delta_list)
+    
+    def visualize_completess_deltas_comparison(
+        self,
+        n_steps_arr: list[int],
+        baseline: torch.Tensor = None
+        ) -> None:
+        completeness_delta_list = self.completeness_deltas_comparison(n_steps_arr=n_steps_arr, baseline=baseline)
+
+        _visualize_completeness_deltas_comparison(completeness_deltas_list=completeness_delta_list,n_steps_arr=n_steps_arr)
+
+        
+
+        
+        
+    
 

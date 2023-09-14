@@ -36,3 +36,17 @@ def _visualize_log_odds(
     plt.tight_layout()
     plt.savefig("log_odds_ig.eps", format="eps")
     # plt.show()
+
+def _visualize_completeness_deltas_comparison(
+        completeness_deltas_list : np.ndarray,
+        n_steps_arr: list[int]
+    ) -> None:
+
+    plt.plot(n_steps_arr, completeness_deltas_list)
+    plt.xlabel("Anzahl der Approximationsschritte m")
+    plt.ylabel("Delta")
+
+    plt.ticklabel_format(style="sci",axis="y",scilimits=(0,0))
+
+    plt.tight_layout()
+    plt.show()
