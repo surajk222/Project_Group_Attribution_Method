@@ -16,7 +16,7 @@ def visualise_loss_and_accuracy(
         train_accuracy(list[float]): List of train accuracies.
         validation_accuracy(list[float]): List of validation accuracies.
     """
-    x = np.linspace(0, len(train_loss),num=len(train_loss))
+    x = np.linspace(0, len(train_loss),num=len(train_loss), endpoint=False)
 
     fig, (ax1,ax2) = plt.subplots(2)
 
