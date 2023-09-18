@@ -3,15 +3,12 @@ from data.util.utils import DatasetMode
 import numpy as np
 import torch
 
-def generate_uniform_baseline(n=50):
+def generate_balanced_uniform_baseline(n=50):
 
     dataset = DryBean(DatasetMode.TRAIN)
 
     train_inputs = dataset[:][0]
     train_labels = dataset[:][1]
-
-    print(train_inputs.shape)
-    print(train_labels.shape)
 
     categories_dict = dataset.categories
 
@@ -37,4 +34,20 @@ def generate_uniform_baseline(n=50):
         mean_of_categories[category_idx,:] = mean_of_category
 
     return torch.mean(mean_of_categories, axis=0)
+
+def generate_uniform_baseline(n=50):
+
+    dataset = DryBean(DatasetMode.TRAIN)
+
+    train_inputs = dataset[:][0]
+
+    np.random.seed(42)
+    sample_indexes = np.random.choice(len(train_inputs),n,replace=False)
+
+    sample_datapoints = np.take(train_inputs, sample_indexes, axis=0)
+
+    mean_sample_datapoints = torch.mean(a=sample_datapoints, axis=0)
+
+    return mean_sample_datapoints
+
 
