@@ -1,5 +1,6 @@
 from torch import nn
 import torch
+import copy
 
 class NeuralNetwork(nn.Module):
     """
@@ -55,8 +56,6 @@ class NeuralNetwork(nn.Module):
         
         else:
             return nn.functional.softmax(y)
-
-        
 
     
     def get_max_feature(
@@ -118,3 +117,57 @@ class NeuralNetwork(nn.Module):
             gradients[i,:] = input.grad
         
         return gradients, target_label_idx
+    
+
+class AutoBaselineNetwork(nn.Module):
+    """
+    Neurol Network for autobaseline calculation.
+    """
+
+    def __init__(self, initial_baseline : torch.Tensor):
+        """
+        Args:
+            initial_baseline (torch.Tensor): Baseline to start from.    
+        """
+        super().__init__()
+
+        self.model = nn.Linear(1,16,bias=False)
+        initial_baseline_with_grad = copy.deepcopy(initial_baseline).requires_grad_(True)
+        with torch.no_grad():
+            self.model.weight[:,0] = initial_baseline_with_grad
+    def forward(self,x):
+        return self.model(x)
+    
+class CombinedBaselineNetwork(nn.Module):
+
+    def __init__(self, dry_beans_model : NeuralNetwork, initial_baseline : torch.Tensor):
+        super().__init__()
+
+        self.autobaseline_model = AutoBaselineNetwork(initial_baseline=initial_baseline)
+        self.dry_beans_model = copy.deepcopy(dry_beans_model)
+
+        self.dry_beans_model.requires_grad_(False)
+
+    def forward(self,x):
+        autobaseline_model_output = self.autobaseline_model(x)
+
+        dry_beans_model_output = self.dry_beans_model.predict(autobaseline_model_output, detach=False)
+
+        return autobaseline_model_output,dry_beans_model_output
+    
+    def get_autobaseline(self):
+        return self.autobaseline_model(torch.ones((1)))
+    
+def combined_model_loss_fn(
+        autobaseline : torch.Tensor, 
+        initial_baseline : torch.Tensor, 
+        actual_model_output : torch.Tensor, 
+        target_model_output : torch.Tensor, 
+        baseline_error_weight : float):
+    
+    l_baseline = torch.nn.functional.l1_loss(autobaseline,initial_baseline)
+    
+    #l_model_output = torch.max(torch.abs(actual_model_output - target_model_output))
+    l_model_output = torch.nn.functional.l1_loss(actual_model_output, target_model_output)
+
+    return baseline_error_weight * l_baseline + (1-baseline_error_weight) * l_model_output
