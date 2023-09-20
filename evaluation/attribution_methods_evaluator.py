@@ -56,6 +56,7 @@ class AttributionMethodsEvaluator():
         Returns:
             certainties or log_odds_of_datapoint(np.ndarray): Depending on apply_log
         """
+        x = torch.clone(x) #to avoid manipulation the dataset
 
         target_label_index = self.model.predict(x).argmax().item()
 
@@ -63,10 +64,12 @@ class AttributionMethodsEvaluator():
         masking_order = torch.argsort(attribution_scores, descending=True)
         masking_order = masking_order.numpy()
 
+        baseline = kwargs.get("baseline", torch.zeros(16))
+
         predictions_with_mask = np.zeros((16))
 
         for i in range(len(predictions_with_mask)):
-            x[masking_order[0:i]] = 0
+            x[masking_order[0:i]] = baseline[masking_order[0:i]]
             prediction = self.model.predict(x)
             predictions_with_mask[i] = prediction[target_label_index]
 
@@ -92,6 +95,7 @@ class AttributionMethodsEvaluator():
         Returns:
             certainties or log_odds
         """
+        x = torch.clone(x) #to avoid manipulation the dataset
         
         target_label_index = self.model.predict(x).argmax().item()
         # print("Model prediction: " + str(self.model.predict(x)))
