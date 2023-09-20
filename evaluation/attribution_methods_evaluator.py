@@ -84,6 +84,7 @@ class AttributionMethodsEvaluator():
             self,
             x: torch.Tensor,
             apply_log : bool = True,
+            **kwargs
             ) -> np.ndarray:
         """
         Calculates a random reference of a datapoint by randomly choosing the masking order.
@@ -96,6 +97,8 @@ class AttributionMethodsEvaluator():
             certainties or log_odds
         """
         x = torch.clone(x) #to avoid manipulation the dataset
+
+        baseline = kwargs.get("baseline", torch.zeros(16))
         
         target_label_index = self.model.predict(x).argmax().item()
         # print("Model prediction: " + str(self.model.predict(x)))
@@ -105,7 +108,7 @@ class AttributionMethodsEvaluator():
         # print("initial x: " + str(x))
 
         for i in range(len(predictions_with_random_mask)):
-            x[random_masking_order[0:i]] = 0
+            x[random_masking_order[0:i]] = baseline[random_masking_order[0:i]]
             # print("Masked input: " + str(x))
             prediction = self.model.predict(x)
             # print("Target-label-index: " + str(target_label_index))
@@ -177,7 +180,8 @@ class AttributionMethodsEvaluator():
     def get_random_references_of_dataset(
             self,
             dataset: torch.utils.data.Dataset,
-            apply_log : bool = True
+            apply_log : bool = True,
+            **kwargs
         ) -> tuple[np.ndarray, np.ndarray] :
         """
         Calculates a random reference of each datapoint in a dataset and the mean of them. The masking order is choosen ramdomly for each datapoint. 
@@ -196,7 +200,7 @@ class AttributionMethodsEvaluator():
         random_references = np.zeros((len(dataset), 16))
 
         for i in tqdm(range(len(random_references))):
-            random_references[i] = self.get_random_references_of_datapoint(dataset[i][0], apply_log=apply_log)
+            random_references[i] = self.get_random_references_of_datapoint(dataset[i][0], apply_log=apply_log, **kwargs)
             
 
         mean = random_references.mean(axis=0)
@@ -237,6 +241,6 @@ class AttributionMethodsEvaluator():
         log_odds, mean, max, min = self.get_log_odds_of_dataset(dataset_copy,attribute,apply_log,**kwargs)
 
         dataset_copy = copy.deepcopy(dataset)
-        random_references, random_references_mean = self.get_random_references_of_dataset(dataset=dataset_copy,apply_log=apply_log)
+        random_references, random_references_mean = self.get_random_references_of_dataset(dataset=dataset_copy,apply_log=apply_log,**kwargs)
 
         _visualize_log_odds(log_odds, mean, max, min, random_references_mean,apply_log)
