@@ -144,9 +144,14 @@ def train_model_and_visualize(
 
 def train_autobaseline(
         dry_beans_model : NeuralNetwork, 
-        initial_baseline : torch.Tensor, 
-        num_epochs : int = 10,
-        baseline_error_weight = 0.5):
+        initial_baseline : torch.Tensor = None, 
+        num_epochs : int = 300,
+        baseline_error_weight = 0.4):
+    
+    if initial_baseline == None:
+        torch.manual_seed(48)
+        initial_baseline = torch.FloatTensor(16).uniform_(0.005,0.01)
+
     dataset_len = 1000
     x = torch.ones((dataset_len, 1)) #dataset_len x 1
     y_baseline = torch.unsqueeze(initial_baseline,0).repeat(dataset_len,1) #dataset_len x len(initial_baseline)
@@ -182,6 +187,3 @@ def train_autobaseline(
     print("prediction: " + str(dry_beans_model.predict(combined_baseline_model.get_autobaseline())))
 
     return combined_baseline_model.get_autobaseline().detach()
-
-
-
