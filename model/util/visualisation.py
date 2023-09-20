@@ -21,14 +21,14 @@ def visualise_loss_and_accuracy(
     fig, (ax1,ax2) = plt.subplots(2)
 
     
-    ax1.plot(x,train_loss, label="Train-Loss")
-    ax1.plot(x,validation_loss, label="Validation-Loss")
+    ax1.plot(x,train_loss, label="Train")
+    ax1.plot(x,validation_loss, label="Validation")
     ax1.set_xlabel("Epoch")
     ax1.set_ylabel("Cross-Entropy Loss")
     ax1.legend()
 
-    ax2.plot(x, train_accuracy, label="Train-Accuracy")
-    ax2.plot(x,validation_accuracy, label="Validation-Accuracy")
+    ax2.plot(x, train_accuracy, label="Train")
+    ax2.plot(x,validation_accuracy, label="Validation")
     ax2.set_xlabel("Epoch")
     ax2.set_ylabel("Accuracy")
     ax2.legend()
