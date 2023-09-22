@@ -31,6 +31,7 @@ class AttributionMethodsEvaluator():
             x: torch.Tensor,
             attribute,
             apply_log: bool = True,
+            masking_baseline = torch.zeros(16),
             **kwargs) -> np.ndarray:
         """
         Calculates the log odds of one datapoint. Designed generically so it can work with different attribution methods. To work with an attribution method,
@@ -50,6 +51,7 @@ class AttributionMethodsEvaluator():
                     target_label_index (int): Equals the input argument, except the input argument is None. In this case, the
                         index of the maximum output feature is returned.
             apply_log (bool, optional): If the log should be applied: log(certainty / 1-certainty).
+            masking_baseline (torch.Tensor): baseline to mask the features with, zero baseline as default
             **kwargs: additional arguments for specific attribution methods, e.g. baseline for integrated gradients. **kwargs get passed
                 to the attribute callable.
 
@@ -64,12 +66,10 @@ class AttributionMethodsEvaluator():
         masking_order = torch.argsort(attribution_scores, descending=True)
         masking_order = masking_order.numpy()
 
-        baseline = kwargs.get("baseline", torch.zeros(16))
-
         predictions_with_mask = np.zeros((16))
 
         for i in range(len(predictions_with_mask)):
-            x[masking_order[0:i]] = baseline[masking_order[0:i]]
+            x[masking_order[0:i]] = masking_baseline[masking_order[0:i]]
             prediction = self.model.predict(x)
             predictions_with_mask[i] = prediction[target_label_index]
 
@@ -84,6 +84,7 @@ class AttributionMethodsEvaluator():
             self,
             x: torch.Tensor,
             apply_log : bool = True,
+            masking_baseline = torch.zeros(16),
             **kwargs
             ) -> np.ndarray:
         """
@@ -92,13 +93,12 @@ class AttributionMethodsEvaluator():
         Args:
             x (torch.Tensor): datapoint for which the reference gets calculated.
             apply_log (bool, optional): If the log should be applied: log(certainty / 1-certainty).
+            masking_baseline (torch.Tensor): baseline to mask the features with, zero baseline as default
 
         Returns:
             certainties or log_odds
         """
         x = torch.clone(x) #to avoid manipulation the dataset
-
-        baseline = kwargs.get("baseline", torch.zeros(16))
         
         target_label_index = self.model.predict(x).argmax().item()
         # print("Model prediction: " + str(self.model.predict(x)))
@@ -108,7 +108,7 @@ class AttributionMethodsEvaluator():
         # print("initial x: " + str(x))
 
         for i in range(len(predictions_with_random_mask)):
-            x[random_masking_order[0:i]] = baseline[random_masking_order[0:i]]
+            x[random_masking_order[0:i]] = masking_baseline[random_masking_order[0:i]]
             # print("Masked input: " + str(x))
             prediction = self.model.predict(x)
             # print("Target-label-index: " + str(target_label_index))
@@ -129,6 +129,7 @@ class AttributionMethodsEvaluator():
             dataset: torch.utils.data.Dataset,
             attribute,
             apply_log: bool = True,
+            masking_baseline = torch.zeros(16),
             **kwargs
         ) -> tuple[np.ndarray, #log-odds
               np.ndarray, #mean of log_odds
@@ -154,13 +155,14 @@ class AttributionMethodsEvaluator():
                     target_label_index (int): Equals the input argument, except the input argument is None. In this case, the
                         index of the maximum output feature is returned.
             apply_log (bool, optional): If the log should be applied: log(certainty / 1-certainty).
+            masking_baseline (torch.Tensor): baseline to mask the features with, zero baseline as default
             **kwargs: additional arguments for specific attribution methods, e.g. baseline for integrated gradients. **kwargs get passed
                 to the attribute callable.
         """
         log_odds = np.zeros((len(dataset),16))
 
         for i in tqdm(range(len(log_odds))):
-            log_odds[i] = self.get_log_odds_of_datapoint(dataset[i][0],attribute=attribute,apply_log=apply_log,**kwargs)
+            log_odds[i] = self.get_log_odds_of_datapoint(dataset[i][0],attribute=attribute,apply_log=apply_log, masking_baseline=masking_baseline, **kwargs)
 
         #mean, max and min calculation
         mean = log_odds.mean(axis=0)
@@ -181,6 +183,7 @@ class AttributionMethodsEvaluator():
             self,
             dataset: torch.utils.data.Dataset,
             apply_log : bool = True,
+            masking_baseline = torch.zeros(16),
             **kwargs
         ) -> tuple[np.ndarray, np.ndarray] :
         """
@@ -191,6 +194,7 @@ class AttributionMethodsEvaluator():
         Args:
             dataset (torch.utils.data.Dataset): Dataset for which the baseline gets calculated.
             apply_log (bool, optional): If the log should be applied: log(certainty / 1-certainty).
+            masking_baseline (torch.Tensor): baseline to mask the features with, zero baseline as default
 
         Returns:
             random references (np.ndarray)
@@ -200,7 +204,7 @@ class AttributionMethodsEvaluator():
         random_references = np.zeros((len(dataset), 16))
 
         for i in tqdm(range(len(random_references))):
-            random_references[i] = self.get_random_references_of_datapoint(dataset[i][0], apply_log=apply_log, **kwargs)
+            random_references[i] = self.get_random_references_of_datapoint(dataset[i][0], apply_log=apply_log, masking_baseline=masking_baseline, **kwargs)
             
 
         mean = random_references.mean(axis=0)
@@ -211,7 +215,9 @@ class AttributionMethodsEvaluator():
             self,
             dataset: torch.utils.data.Dataset,
             attribute,
+            title, 
             apply_log: bool = True,
+            masking_baseline = torch.zeros(16),
             **kwargs
         ) -> None:
         """
@@ -227,20 +233,22 @@ class AttributionMethodsEvaluator():
                     target_label_index (int): Index of the output feature for which the attribution scores are 
                         calculated. If None, the Index of the max output feauture is selected.
                     **kwargs: additional, attribution method specific arguments
-                    
+            
                 Returns:
                     attribution_scores (torch.Tensor)
                     target_label_index (int): Equals the input argument, except the input argument is None. In this case, the
                         index of the maximum output feature is returned.
-            baseline (torch.Tensor): baseline for the Integrated Gradient Method. Does only need to be given if this method is used.
+            title (String): title of plot visualizing the log odds
+            apply_log (bool, optional): If the log should be applied: log(certainty / 1-certainty).
+            masking_baseline (torch.Tensor): baseline to mask the features with, zero baseline as default
             **kwargs: additional arguments for specific attribution methods, e.g. baseline for integrated gradients. **kwargs get passed
                 to the attribute callable.
         """
 
         dataset_copy = copy.deepcopy(dataset)
-        log_odds, mean, max, min = self.get_log_odds_of_dataset(dataset_copy,attribute,apply_log,**kwargs)
+        log_odds, mean, max, min = self.get_log_odds_of_dataset(dataset_copy,attribute,apply_log,masking_baseline,**kwargs)
 
         dataset_copy = copy.deepcopy(dataset)
-        random_references, random_references_mean = self.get_random_references_of_dataset(dataset=dataset_copy,apply_log=apply_log,**kwargs)
+        random_references, random_references_mean = self.get_random_references_of_dataset(dataset=dataset_copy,apply_log=apply_log,masking_baseline=masking_baseline, **kwargs)
 
-        _visualize_log_odds(log_odds, mean, max, min, random_references_mean,apply_log)
+        _visualize_log_odds(title, log_odds, mean, max, min, random_references_mean,apply_log)
