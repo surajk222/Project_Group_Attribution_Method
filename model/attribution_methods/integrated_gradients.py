@@ -31,8 +31,9 @@ class IntegratedGradients():
             self,
             x: torch.Tensor,
             target_label_index: int = None,
-            baseline: torch.Tensor = None,
-            n_steps: int = 50
+            attribution_baseline: torch.Tensor = None,
+            n_steps: int = 50,
+            **kwargs
             ) -> (torch.Tensor, int):
         """
         Performs the calculation of the attribution scores with the Integrated Gradients method.
@@ -42,7 +43,7 @@ class IntegratedGradients():
             target_label_index (optional, int): Index of the output feature for which the integrated gradients must be calculated.
                 If the target_label_index is not specified, the Integrated Gradients of the output feature with the highest value
                 gets calculated.
-            baseline (optional, torch.Tensor): The baseline input. If None, the baseline is set to a zero-vector. Must have the same shape as x.
+            attribution_baseline (optional, torch.Tensor): The attribution_baseline input. If None, the attribution_baseline is set to a zero-vector. Must have the same shape as x.
                 Defaults to None.
             n_steps (optional, int): Number of steps for the integral approximation. Defaults to 50.
         
@@ -51,14 +52,14 @@ class IntegratedGradients():
             target_label_index (int): Equals the input argument, except the input argument is None. In this case, the
                 index of the maximum output feature is returned.
         """
-        if baseline == None:
-            baseline = x*0
-        assert(baseline.shape == x.shape)
+        if attribution_baseline == None:
+            attribution_baseline = x*0
+        assert(attribution_baseline.shape == x.shape)
 
-        straightline_path = torch.vstack([baseline + float(i)/n_steps * (x-baseline) for i in range(1, n_steps + 1)])
+        straightline_path = torch.vstack([attribution_baseline + float(i)/n_steps * (x-attribution_baseline) for i in range(1, n_steps + 1)])
         gradients, target_label_index = self.get_gradients(straightline_path, target_label_index)
 
         avg_gradients = gradients.mean(dim=0)
-        integrated_gradients = (x-baseline) * avg_gradients
+        integrated_gradients = (x-attribution_baseline) * avg_gradients
 
         return integrated_gradients, target_label_index

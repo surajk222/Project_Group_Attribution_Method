@@ -140,7 +140,7 @@ def train_model_and_visualize(
     return model
 
 
-
+from model.models import combined_model_loss_fn
 
 def train_autobaseline(
         dry_beans_model : NeuralNetwork, 

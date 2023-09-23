@@ -96,20 +96,57 @@ def visualize_baselines_output(
 
     x = np.arange(len(zero_baseline_output))
 
-    fig, ax = plt.subplots(figsize=(9,4))
-    ax.bar(x-0.1,zero_baseline_output.detach().numpy(),width=0.2, label="Zero Baseline", color="black")
-    ax.bar(x+0.1, uniform_output_baseline_output.detach().numpy(),width=0.2, label="Uniform Output Baseline", color="royalblue")
+    fig, ax = plt.subplots(figsize=(5,2.2))
+    ax.bar(x-0.1,zero_baseline_output.detach().numpy(),width=0.2, color="black", label="Zero Baseline")
+    ax.bar(x+0.1, uniform_output_baseline_output.detach().numpy(),width=0.2, color="royalblue", label="Uniform Output Baseline")
 
     ax.plot(x,np.ones_like(x)*1/len(x),linestyle="dashed", color="gray", label="Uniforme Verteilung")
 
-    ax.set_title("Modellausgabe der Zero Baseline und Uniform Output Baseline", fontsize=16)
-    ax.set_xlabel(r"Output Feature Index $i$", fontsize=14)
-    ax.set_ylabel(r"Modellausgabe $f(x')_i$", fontsize=14)
+    ax.set_title("Modellausgabe der Zero Baseline und Uniform Output Baseline", fontsize=12)
+    ax.set_xlabel(r"Output Feature Index $i$")
+    ax.set_ylabel(r"Modellausgabe $f(x')_i$")
     ax.set_ylim(0.0,0.4)
 
     #plt.tight_layout()
-    lgd = plt.legend(fontsize=14,bbox_to_anchor=(1.05, 1.0), loc='upper left')
+    lgd = plt.legend(bbox_to_anchor=(0.5, -0.28), loc='upper center', ncols=3)
     plt.savefig("./figures/uniform_zero_baseline_output.eps", format="eps",bbox_extra_artists=(lgd,),bbox_inches='tight')
 
 
-def visualize_log
+def _visualize_log_odds_comparison(
+    log_odds_mean_uniform_output_baseline : np.ndarray,
+    certainty_mean_uniform_output_baseline : np.ndarray,
+    log_odds_mean_zero_baseline : np.ndarray,
+    certainty_mean_zero_baseline : np.ndarray,
+    log_odds_mean_random_masking : np.ndarray,
+    certainty_mean_random_masking : np.ndarray
+    ) -> None:
+
+    fig, (ax1, ax2) = plt.subplots(1,2, figsize=(6,2.7))
+
+
+    x = np.linspace(0, 1, 16)
+
+
+    ax1.plot(x, certainty_mean_zero_baseline, color="black", label="Zero Baseline")
+    ax1.plot(x, certainty_mean_uniform_output_baseline, color="royalblue", label="Uniform Output Baseline")
+    ax1.plot (x, certainty_mean_random_masking, linestyle="dashed", color="gray", label="Random Reference")
+    ax1.set_title("Certainty Kurven", fontsize=12)
+    ax1.set_ylabel(r"Mean von $f(x)$")
+    ax1.set_xlabel("Anteil der maskierten Features")
+    ax1.set_xlim(0.0,0.2)
+    handles, labels = ax1.get_legend_handles_labels()
+
+    ax2.plot(x, log_odds_mean_zero_baseline, color="black")
+    ax2.plot(x, log_odds_mean_uniform_output_baseline, color="royalblue")
+    ax2.plot(x, log_odds_mean_random_masking, linestyle="dashed", color="gray")
+    ax2.set_title("Log Odds Kurven", fontsize=12)
+    ax2.set_ylabel(r"Mean von $log(f(x)/(1-f(x)))$")
+    ax2.set_xlabel("Anteil der maskierten Features")
+    ax2.set_xlim(0.0,0.2)
+
+    lgd = plt.legend(handles, labels=labels,bbox_to_anchor =(0,-0.28), loc='upper center',ncols=3)
+    plt.subplots_adjust(wspace=0.3)
+    plt.savefig("./figures/ig_log_odds.eps", format="eps",bbox_extra_artists=(lgd,),bbox_inches='tight')
+
+
+
