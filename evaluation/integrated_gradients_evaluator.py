@@ -5,7 +5,7 @@ from model.attribution_methods.integrated_gradients import IntegratedGradients
 from model.models import NeuralNetwork
 from tqdm import tqdm
 import numpy as np
-from evaluation.utils.visualisation import _visualize_completeness_deltas_comparison
+from evaluation.utils.visualisation import _visualize_completeness_deltas_comparison, _visualize_completeness_deltas_boxplots
 
 class IntegratedGradientsEvaluator():
     """
@@ -38,7 +38,7 @@ class IntegratedGradientsEvaluator():
             n_steps (optional, int): Number of steps for the integral approximation. Defaults to 50.
         
         Returns:
-            completeness_delta_abs (np.ndarray): NumPy array for the absolute deltas of each datapoint.
+            completeness_delta_np (np.ndarray): NumPy array of the delta for each datapoint.
         """
         if baseline == None:
             baseline = 0*self.dataset[0][0]
@@ -61,9 +61,7 @@ class IntegratedGradientsEvaluator():
 
         completeness_deltas_np = np.array(completeness_deltas)
 
-        completeness_deltas_abs = np.abs(completeness_deltas_np)
-
-        return completeness_deltas_abs
+        return completeness_deltas_np
     
     def completeness_deltas_statistics(
             self,
@@ -85,7 +83,9 @@ class IntegratedGradientsEvaluator():
             float: absolute
         """
         
-        completeness_deltas_abs = self.completeness_deltas(baseline=baseline,n_steps=n_steps)
+        completeness_deltas = self.completeness_deltas(baseline=baseline,n_steps=n_steps)
+
+        completeness_deltas_abs = np.abs(completeness_deltas)
 
         #mean
         mean = completeness_deltas_abs.mean()
@@ -95,6 +95,7 @@ class IntegratedGradientsEvaluator():
 
         #min
         min = completeness_deltas_abs.min()
+
 
 
         if return_results:
@@ -124,8 +125,8 @@ class IntegratedGradientsEvaluator():
         completeness_delta_list = []
 
         for n_steps in n_steps_arr:
-            completeness_deltas = self.completeness_deltas_statistics(baseline=baseline, n_steps=n_steps, return_results=True)[1]
-            completeness_delta_list.append(completeness_deltas)
+            completeness_deltas_mean = self.completeness_deltas_statistics(baseline=baseline, n_steps=n_steps, return_results=True)[1]
+            completeness_delta_list.append(completeness_deltas_mean)
 
         return np.array(completeness_delta_list)
     
@@ -137,6 +138,20 @@ class IntegratedGradientsEvaluator():
         completeness_delta_list = self.completeness_deltas_comparison(n_steps_arr=n_steps_arr, baseline=baseline)
 
         _visualize_completeness_deltas_comparison(completeness_deltas_list=completeness_delta_list,n_steps_arr=n_steps_arr)
+
+    def completeness_deltas_boxplots(
+        self,
+        n_steps_arr: list[int],
+        baseline: torch.Tensor = None
+        ) -> None:
+
+        completeness_delta_list = []
+
+        for n_steps in n_steps_arr:
+            completeness_deltas = self.completeness_deltas_statistics(baseline=baseline, n_steps=n_steps, return_results=True)[0]
+            completeness_delta_list.append(completeness_deltas)
+
+        _visualize_completeness_deltas_boxplots(completeness_delta_list, n_steps_arr)
 
         
 
