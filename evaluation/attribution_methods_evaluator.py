@@ -64,7 +64,8 @@ class AttributionMethodsEvaluator():
         masking_order = torch.argsort(attribution_scores, descending=True)
         masking_order = masking_order.numpy()
 
-        baseline = kwargs.get("baseline", torch.zeros(16))
+        baseline = kwargs.get("baseline", torch.zeros(16)) #this is the baseline for masking the input
+
 
         predictions_with_mask = np.zeros((16))
 
@@ -244,3 +245,17 @@ class AttributionMethodsEvaluator():
         random_references, random_references_mean = self.get_random_references_of_dataset(dataset=dataset_copy,apply_log=apply_log,**kwargs)
 
         _visualize_log_odds(log_odds, mean, max, min, random_references_mean,apply_log)
+
+    def visualize_comparison_log_odds_of_zero_uniform_output_baseline(
+            self,
+            uniform_output_baseline : torch.Tensor,
+            attribute,
+            apply_log : bool
+        ) -> None:
+
+        log_odds_mean_uniform_output_baseline = self.get_log_odds_of_dataset(
+            dataset=self.dataset,
+            attribute=attribute,
+            apply_log=apply_log,
+            baseline=torch.zeros(16), #masking baseline
+            attribution_baseline=uniform_output_baseline)
