@@ -5,6 +5,7 @@ import torch
 
 
 def _visualize_log_odds(
+    title,
     log_odds: np.ndarray,
     mean: np.ndarray,
     max: np.ndarray,
@@ -28,11 +29,7 @@ def _visualize_log_odds(
     else: 
         plt.ylabel("Modellausgabe")
 
-    if apply_log:
-        plt.title("Log Odds von Integrated Gradients")
-
-    else: 
-        plt.title("Certainty Kurve von Integrated Gradients")
+    plt.title(title)
 
     plt.legend()
     plt.tight_layout()
