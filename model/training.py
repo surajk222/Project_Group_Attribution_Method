@@ -146,7 +146,19 @@ def train_autobaseline(
         dry_beans_model : NeuralNetwork, 
         initial_baseline : torch.Tensor = None, 
         num_epochs : int = 300,
-        baseline_error_weight = 0.4):
+        baseline_error_weight = 0.4
+        ) -> torch.Tensor:
+    
+    """
+    This method trains the CombinedBaselineNetwork. To be specific, only trains the first Layer of the CombinedBaselineNetwork consisting of the AutobaselineNetwork. The other
+    layers are equivalent to the Dry Beans Network.
+
+    Args:
+        dry_beans_model (NeuralNetwork): The traines Dry Beans Model.
+        initial_baseline (torch.Tensor): The initial baseline from which the Uniform Output Baseline gets predicted.
+        num_epochs (int): Number of epochs to train.
+        baseline_error_weight (float): Weight of the baseline error in the loss function.
+    """
     
     if initial_baseline == None:
         torch.manual_seed(48)
@@ -158,15 +170,10 @@ def train_autobaseline(
     y_model_output = torch.ones((1000,7)) * (1/7)
 
     dataset = torch.utils.data.TensorDataset(x,y_baseline,y_model_output)
-
-    dataloader = DataLoader(dataset=dataset,batch_size=32)
-
+    dataloader = DataLoader(dataset=dataset,batch_size=32) #since the dataset consists of the same datapoints, changing the batch_size will only effect the number of training steps.
     combined_baseline_model = CombinedBaselineNetwork(dry_beans_model=dry_beans_model,initial_baseline=initial_baseline)
-
     optimizer = torch.optim.Adam(params=combined_baseline_model.autobaseline_model.parameters(), lr=0.001)
 
-
-    
     for epoch in tqdm(range(num_epochs)):
         for x, y_baseline,y_model_output in dataloader:
             optimizer.zero_grad()

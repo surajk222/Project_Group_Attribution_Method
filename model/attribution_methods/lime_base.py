@@ -62,8 +62,8 @@ class LimeBase :
         local_prediction = model.predict(sample_data[0,used_features].reshape(1,-1))
         
         #print("Intercept" , model.intercept_)
-        print("Local prediction" , local_prediction)
-        print("Sample columns ", sample_labels[0,label])
+        #print("Local prediction" , local_prediction)
+        #print("Sample columns ", sample_labels[0,label])
         
         return model.intercept_,sorted(zip(used_features, model.coef_), key = lambda x : np.abs(x[1])), prediction_score, local_prediction
          

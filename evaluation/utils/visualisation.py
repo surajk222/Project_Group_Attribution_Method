@@ -103,8 +103,8 @@ def visualize_baselines_output(
     ax.plot(x,np.ones_like(x)*1/len(x),linestyle="dashed", color="gray", label="Uniforme Verteilung")
 
     ax.set_title("Modellausgabe der Zero Baseline und Uniform Output Baseline", fontsize=12)
-    ax.set_xlabel(r"Output Feature Index $i$")
-    ax.set_ylabel(r"Modellausgabe $f(x')_i$")
+    ax.set_xlabel(r"Klassenindex $j$")
+    ax.set_ylabel(r"Modellausgabe $f(x')_j$")
     ax.set_ylim(0.0,0.4)
 
     #plt.tight_layout()

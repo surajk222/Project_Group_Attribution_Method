@@ -121,7 +121,7 @@ class NeuralNetwork(nn.Module):
 
 class AutoBaselineNetwork(nn.Module):
     """
-    Neurol Network for autobaseline calculation.
+    Neurol Network for autobaseline calculation. This is one part of the Network to calculate the Uniform Output Baseline (see CombinedBaselineNetwork).
     """
 
     def __init__(self, initial_baseline : torch.Tensor):
@@ -139,18 +139,19 @@ class AutoBaselineNetwork(nn.Module):
         return self.model(x)
     
 class CombinedBaselineNetwork(nn.Module):
+    """
+    Neural Network to determine a Uniform Output Baseline. In this network we are only training the Parameters of the autobaseline_model.
+    """
 
     def __init__(self, dry_beans_model : NeuralNetwork, initial_baseline : torch.Tensor):
         super().__init__()
 
         self.autobaseline_model = AutoBaselineNetwork(initial_baseline=initial_baseline)
         self.dry_beans_model = copy.deepcopy(dry_beans_model)
-
         self.dry_beans_model.requires_grad_(False)
 
     def forward(self,x):
         autobaseline_model_output = self.autobaseline_model(x)
-
         dry_beans_model_output = self.dry_beans_model.predict(autobaseline_model_output, detach=False)
 
         return autobaseline_model_output,dry_beans_model_output
@@ -164,6 +165,17 @@ def combined_model_loss_fn(
         actual_model_output : torch.Tensor, 
         target_model_output : torch.Tensor, 
         baseline_error_weight : float):
+    
+    """
+        Loss Function for the CombindedBaselineNetwork.
+
+        Args:
+            autobaseline (torch.Tensor): Baseline computed from the AutoBaselineNetwork.
+            initial_baseline (torch.Tensor): Initial baseline set before training.
+            actual_model_output (torch.Tensor): Model Output of the autobaseline.
+            target_model_output (torch.Tensor): Target Model Output of the Baseline. In our case the Uniform distribution.
+            baseline_error_weight (float): weight of the baseline error.
+    """
     
     l_baseline = torch.nn.functional.l1_loss(autobaseline,initial_baseline)
     
