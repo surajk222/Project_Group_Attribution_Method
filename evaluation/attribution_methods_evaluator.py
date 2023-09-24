@@ -310,4 +310,63 @@ class AttributionMethodsEvaluator():
             certainty_mean_random_masking=certainty_mean_random_masking
         )
 
+
+    def visualize_comparison_log_odds_of_zero_uniform_output_baseline_for_kernelshap(
+            self,
+            uniform_output_baseline : torch.Tensor,
+            dataset,
+            attribute,
+    ) -> None:
+
+        log_odds_mean_uniform_output_baseline = self.get_log_odds_of_dataset(
+            dataset=dataset,
+            attribute=attribute,
+            apply_log=True,
+            masking_baseline=uniform_output_baseline,
+            attribution_baseline=uniform_output_baseline)[1]
+
+        certainty_mean_uniform_output_baseline = self.get_log_odds_of_dataset(
+            dataset=dataset,
+            attribute=attribute,
+            apply_log=False,
+            masking_baseline=uniform_output_baseline,
+            attribution_baseline=uniform_output_baseline)[1]
+        
+        log_odds_mean_zero_baseline = self.get_log_odds_of_dataset(
+            dataset=dataset,
+            attribute=attribute,
+            apply_log=True,
+            masking_baseline=torch.zeros(16),
+            attribution_baseline = torch.zeros(16))[1]
+        
+        certainty_mean_zero_baseline = self.get_log_odds_of_dataset(
+            dataset=dataset,
+            attribute=attribute,
+            apply_log=False,
+            masking_baseline=torch.zeros(16),
+            attribution_baseline = torch.zeros(16))[1]
+        
+        log_odds_mean_random_masking = self.get_random_references_of_dataset(
+            dataset=dataset,
+            apply_log=True,
+            masking_baseline=torch.zeros(16),
+            attribution_baseline = torch.zeros(16)
+        )[1]
+
+        certainty_mean_random_masking = self.get_random_references_of_dataset(
+            dataset=dataset,
+            apply_log=False,
+            masking_baseline=torch.zeros(16),
+            attribution_baseline = torch.zeros(16)
+        )[1]
+
+        _visualize_log_odds_comparison(
+            log_odds_mean_uniform_output_baseline=log_odds_mean_uniform_output_baseline,
+            certainty_mean_uniform_output_baseline=certainty_mean_uniform_output_baseline,
+            log_odds_mean_zero_baseline=log_odds_mean_zero_baseline,
+            certainty_mean_zero_baseline=certainty_mean_zero_baseline,
+            log_odds_mean_random_masking=log_odds_mean_random_masking,
+            certainty_mean_random_masking=certainty_mean_random_masking
+        )
+
         
