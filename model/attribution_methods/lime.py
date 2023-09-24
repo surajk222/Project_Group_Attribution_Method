@@ -79,7 +79,7 @@ class Lime() :
             values, freq = map(list, zip(*(sorted(count_features.items()))))
             
             self.feature_values[x] = values
-            self.feature_fre[x] = (np.array(freq)/float(sum(freq)))
+            self.feature_fre[x] = (np.array(freq)/float(np.sum(freq)))
             
             
         
@@ -96,9 +96,9 @@ class Lime() :
             sampling_method : Method to perturbed data
         """
         interpreted_data, orginial_data = self.perturbation(instance, num_samples, sampling_method)
+        
 
         distances = pairwise_distances(interpreted_data, interpreted_data[0].reshape(1, -1)).ravel()
-        #print(distances)
         
         n = predict_fn(torch.from_numpy((orginial_data)).float()).numpy()
         
@@ -155,6 +155,7 @@ class Lime() :
         interpredted data : data with interpretable representations encoded with 0 or 1
         original data : same as the original data
         """
+        
         n_cols = data.shape[0]
         interpredted_data = np.zeros((num_samples,n_cols))
         
@@ -183,8 +184,6 @@ class Lime() :
             original_data[:,col] = original_col
         
         original_data[0] = data
-        #print(interpredted_data)
-        #print(original_data)
         return interpredted_data, original_data
     
         
